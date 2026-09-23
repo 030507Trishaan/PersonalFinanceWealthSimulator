@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.streamlit/secrets.toml
+ui/*.backup
+ui/*.before-*
+ui/*.broken-backup
+ui/app_backup_*.py
