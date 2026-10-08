@@ -26,24 +26,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Build (if needed)
-        run: |
-          # No build step needed for static HTML/CSS/JS
-          echo "No build required - deploying static files directly"
-
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload web_demo artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './web_demo'
+          path: web_demo
 
       - name: Deploy to GitHub Pages
         id: deployment
