@@ -13,30 +13,29 @@ function formatINR(value) {
         const digits = String(Math.abs(number));
 
         if (digits.length <= 3) {
-            return `${sign}₹${digits}`;
+            return `₹${sign}${digits}`;
         }
 
         const lastThree = digits.slice(-3);
-        const remaining = digits.slice(0, -3);
+        let remaining = digits.slice(0, -3);
         const groups = [];
 
-        while (remaining.length > 2) {
-            groups.unshift(remaining.slice(-2));
-            remaining = remaining.slice(0, -2);
-        }
-
-        if (remaining) {
-            groups.unshift(remaining);
+        while (remaining.length > 0) {
+            if (remaining.length >= 2) {
+                groups.unshift(remaining.slice(-2));
+                remaining = remaining.slice(0, -2);
+            } else {
+                groups.unshift(remaining);
+                remaining = "";
+            }
         }
 
         const formatted = groups.join(",") + "," + lastThree;
-        return `${sign}₹${formatted}`;
+        return `₹${sign}${formatted}`;
     } catch (e) {
         return "N/A";
     }
 }
-
-// Utility function to validate and clamp values (similar to scenario comparison)
 function validateAndClamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
@@ -339,10 +338,10 @@ function calculateGoalPlanner(currentAge, goalAge, targetCorpus, currentSavings,
     const validated = validateGoalPlannerInputs(currentAge, goalAge, targetCorpus, currentSavings, expectedAnnualReturnPct);
 
     // Extract validated values
-    const P = validated.current_savings; // Current corpus
-    const rAnnual = validated.expected_annual_return_pct / 100.0; // Annual return as decimal
-    const nYears = validated.goal_age - validated.current_age; // Years available
-    const T = validated.target_corpus; // Target corpus
+    const P = validated.currentSavings; // Current corpus
+    const rAnnual = validated.expectedAnnualReturnPct / 100.0; // Annual return as decimal
+    const nYears = validated.goalAge - validated.currentAge; // Years available
+    const T = validated.targetCorpus; // Target corpus
 
     // Calculate years available
     const yearsAvailable = nYears;
@@ -474,7 +473,15 @@ function generateYearByYearProjectionFixed(currentAge, goalAge, currentCorpus, t
     return projection;
 }
 
+// Chart instances
+let wealthChart = null;
+let compositionChart = null;
+let savingsChart = null;
+let scenarioChart = null;
+let goalChart = null;
+
 // DOM Content Loaded
+if (typeof document !== 'undefined') {
 document.addEventListener('DOMContentLoaded', function() {
     // Tab switching functionality
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -531,6 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+}
 
 // Wealth Projection Calculation
 function calculateWealthProjection() {
@@ -556,7 +564,7 @@ function calculateWealthProjection() {
         // Validate investment contribution doesn't exceed available savings
         const availableSavings = inputs.monthly_income - inputs.monthly_expenses;
         if (inputs.monthly_investment_contribution > availableSavings) {
-            throw new Error(`Monthly investment contribution (₹{formatINR(inputs.monthly_investment_contribution)}) cannot exceed available savings (₹{formatINR(availableSavings)})`);
+            throw new Error(`Monthly investment contribution (₹${formatINR(inputs.monthly_investment_contribution)}) cannot exceed available savings (₹${formatINR(availableSavings)})`);
         }
 
         // Calculate projection
@@ -604,19 +612,25 @@ function displayWealthResults(projection, inputs) {
 
     // Charts section
     let chartsHTML = `
-        <div class="chart-container">
+        <div class="chart-wrapper">
             <h3 class="chart-title">Wealth Projection Over Time</h3>
-            <div id="wealth-chart" class="chart-placeholder">Chart would be displayed here</div>
+            <div class="chart-container">
+                <canvas id="wealth-chart"></canvas>
+            </div>
         </div>
 
-        <div class="chart-container">
+        <div class="chart-wrapper">
             <h3 class="chart-title">Wealth Composition: Invested vs Cash</h3>
-            <div id="composition-chart" class="chart-placeholder">Chart would be displayed here</div>
+            <div class="chart-container">
+                <canvas id="composition-chart"></canvas>
+            </div>
         </div>
 
-        <div class="chart-container">
+        <div class="chart-wrapper">
             <h3 class="chart-title">Annual Savings Breakdown</h3>
-            <div id="savings-chart" class="chart-placeholder">Chart would be displayed here</div>
+            <div class="chart-container">
+                <canvas id="savings-chart"></canvas>
+            </div>
         </div>
     `;
 
@@ -718,8 +732,200 @@ function displayWealthResults(projection, inputs) {
 
     wealthResults.innerHTML = metricsHTML + chartsHTML + tableHTML + insightsHTML;
 
-    // Initialize charts (placeholder for now - in a real implementation we'd use Chart.js or similar)
-    initializeChartPlaceholders();
+    // Initialize or update charts
+    updateWealthCharts(df);
+}
+
+// Update wealth simulator charts
+function updateWealthCharts(df) {
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        drawChartError('wealth-chart', 'Chart.js failed to load');
+        drawChartError('composition-chart', 'Chart.js failed to load');
+        drawChartError('savings-chart', 'Chart.js failed to load');
+        return;
+    }
+
+    const ages = df.map(row => row.age);
+    const nominalWealth = df.map(row => row.ending_nominal_wealth);
+    const realWealth = df.map(row => row.inflation_adjusted_wealth);
+    const investedWealth = df.map(row => row.ending_invested_wealth);
+    const cashWealth = df.map(row => row.ending_cash_wealth);
+    const investmentContribution = df.map(row => row.annual_investment_contribution);
+    const cashSavings = df.map(row => row.uninvested_cash_savings);
+
+    // Wealth Projection Over Time chart
+    const wealthCtx = document.getElementById('wealth-chart').getContext('2d');
+    if (wealthChart) {
+        wealthChart.destroy();
+    }
+    wealthChart = new Chart(wealthCtx, {
+        type: 'line',
+        data: {
+            labels: ages,
+            datasets: [
+                {
+                    label: 'Nominal Wealth (₹)',
+                    data: nominalWealth,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 111, 253, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Real Wealth (₹)',
+                    data: realWealth,
+                    borderColor: '#198754',
+                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        // Include a rupee symbol in the tick labels
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Wealth Composition: Invested vs Cash chart
+    const compositionCtx = document.getElementById('composition-chart').getContext('2d');
+    if (compositionChart) {
+        compositionChart.destroy();
+    }
+    compositionChart = new Chart(compositionCtx, {
+        type: 'line',
+        data: {
+            labels: ages,
+            datasets: [
+                {
+                    label: 'Invested Wealth (₹)',
+                    data: investedWealth,
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Cash Wealth (₹)',
+                    data: cashWealth,
+                    borderColor: '#20c997',
+                    backgroundColor: 'rgba(32, 201, 151, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Annual Savings Breakdown chart
+    const savingsCtx = document.getElementById('savings-chart').getContext('2d');
+    if (savingsChart) {
+        savingsChart.destroy();
+    }
+    savingsChart = new Chart(savingsCtx, {
+        type: 'line',
+        data: {
+            labels: ages,
+            datasets: [
+                {
+                    label: 'Investment Contribution (₹)',
+                    data: investmentContribution,
+                    borderColor: '#fd7e14',
+                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Cash Savings (₹)',
+                    data: cashSavings,
+                    borderColor: '#6f42c1',
+                    backgroundColor: 'rgba(111, 66, 193, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Helper function to draw error message on canvas
+function drawChartError(canvasId, message) {
+    const canvas = document.getElementById(canvasId);
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#dc3545';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+    }
 }
 
 // Scenario Comparison Calculation
@@ -846,18 +1052,121 @@ function displayScenarioResults(results) {
         </div>
     `;
 
-    // Optional: Chart for wealth over time by scenario
+    // Chart for wealth over time by scenario
     let chartHTML = `
-        <div class="chart-container">
+        <div class="chart-wrapper">
             <h3 class="chart-title">Wealth Over Time by Scenario</h3>
-            <div id="scenario-chart" class="chart-placeholder">Chart would be displayed here</div>
+            <div class="chart-container">
+                <canvas id="scenario-chart"></canvas>
+            </div>
         </div>
     `;
 
     scenarioResults.innerHTML = wealthTableHTML + assumptionsTableHTML + chartHTML;
 
-    // Initialize chart placeholders
-    initializeChartPlaceholders();
+    // Initialize or update scenario chart
+    updateScenarioChart(results);
+}
+
+// Update scenario comparison chart
+function updateScenarioChart(results) {
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        drawChartError('scenario-chart', 'Chart.js failed to load');
+        return;
+    }
+
+    const scenarioTypes = ['base', 'conservative', 'optimistic', 'custom'];
+    const scenarioNames = {
+        'base': 'Base',
+        'conservative': 'Conservative',
+        'optimistic': 'Optimistic',
+        'custom': 'Custom'
+    };
+
+    // Collect data for each scenario
+    const chartData = {
+        labels: [],
+        datasets: []
+    };
+
+    // We assume all scenarios have the same age range (they should, as inputs are same except for parameters)
+    // We'll take the age labels from the base scenario (or first available)
+    let ages = [];
+    for (const scenarioType of scenarioTypes) {
+        if (results.scenarios[scenarioType] && results.scenarios[scenarioType].projection && results.scenarios[scenarioType].projection.length > 0) {
+            ages = results.scenarios[scenarioType].projection.map(row => row.age);
+            break;
+        }
+    }
+
+    chartData.labels = ages;
+
+    // Define colors for each scenario
+    const colors = {
+        'base': '#0d6efd',
+        'conservative': '#fd7e14',
+        'optimistic': '#198754',
+        'custom': '#6f42c1'
+    };
+
+    for (const scenarioType of scenarioTypes) {
+        if (results.scenarios[scenarioType] && results.scenarios[scenarioType].projection && results.scenarios[scenarioType].projection.length > 0) {
+            const wealthData = results.scenarios[scenarioType].projection.map(row => row.ending_nominal_wealth);
+            chartData.datasets.push({
+                label: scenarioNames[scenarioType],
+                data: wealthData,
+                borderColor: colors[scenarioType],
+                backgroundColor: hexToRgba(colors[scenarioType], 0.1),
+                tension: 0.3,
+                fill: false
+            });
+        }
+    }
+
+    const scenarioCtx = document.getElementById('scenario-chart').getContext('2d');
+    if (scenarioChart) {
+        scenarioChart.destroy();
+    }
+    scenarioChart = new Chart(scenarioCtx, {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Helper function to convert hex color to rgba
+function hexToRgba(hex, alpha) {
+    // Remove the '#' if present
+    const cleanHex = hex.replace('#', '');
+    // Parse the hex values
+    const bigint = parseInt(cleanHex, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 // Goal Planner Calculation
@@ -925,8 +1234,8 @@ function displayGoalResults(result) {
     let statusHTML = `
         <div style="text-align: center; margin-bottom: 2rem;">
             ${result.goal_reached ?
-                '<div style="background-color: #D4EDDA; color: #155724; padding: 1rem; border-radius: 6px; border: 1px solid #C3E6CB;">✅ Goal Reached</div>' :
-                '<div style="background-color: #F8D7DA; color: #721C24; padding: 1rem; border-radius: 6px; border: 1px solid #F5C2C7;">⚠️ Goal Not Reached</div>'
+                '<div style="background-color: #D4EDDA; color: #155724; padding: 1rem; border-radius: 6px; border: 1px solid #C3E6CB;">âœ… Goal Reached</div>' :
+                '<div style="background-color: #F8D7DA; color: #721C24; padding: 1rem; border-radius: 6px; border: 1px solid #F5C2C7;">âš ï¸ Goal Not Reached</div>'
             }
         </div>
     `;
@@ -1001,36 +1310,100 @@ function displayGoalResults(result) {
         </div>
     `;
 
-    // Chart placeholder
+    // Chart for corpus growth projection
     let chartHTML = `
-        <div class="chart-container">
+        <div class="chart-wrapper">
             <h3 class="chart-title">Corpus Growth Projection</h3>
-            <div id="goal-chart" class="chart-placeholder">Chart would be displayed here</div>
+            <div class="chart-container">
+                <canvas id="goal-chart"></canvas>
+            </div>
         </div>
     `;
 
     goalResults.innerHTML = prominentHTML + statusHTML + detailsHTML + tableHTML + chartHTML;
 
-    // Initialize chart placeholders
-    initializeChartPlaceholders();
+    // Initialize or update goal chart
+    updateGoalChart(result);
 }
 
-// Initialize chart placeholders (in a real implementation, we'd use Chart.js or similar)
-function initializeChartPlaceholders() {
-    // This is a placeholder - in a real implementation we would initialize actual charts
-    // For now, we just ensure the placeholder elements exist
-    const placeholders = document.querySelectorAll('.chart-placeholder');
-    placeholders.forEach(placeholder => {
-        if (placeholder.innerHTML === 'Chart would be displayed here') {
-            placeholder.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: #6C757D;">
-                    <div style="font-size: 1.5rem; margin-bottom: 1rem;">📊</div>
-                    <div>Chart visualization would appear here in a full implementation</div>
-                    <div style="font-size: 0.9rem; margin-top: 1rem; color: #ADB5BD;">
-                        For demo purposes, charts are represented as placeholders
-                    </div>
-                </div>
-            `;
+// Update goal planner chart
+function updateGoalChart(result) {
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        drawChartError('goal-chart', 'Chart.js failed to load');
+        return;
+    }
+
+    const projection = result.year_by_year_projection;
+    const ages = projection.map(row => row.Age);
+    const endingCorpus = projection.map(row => row['Ending Corpus']);
+    const targetCorpus = projection.map(row => row['Target Corpus']); // This is constant but we'll map it
+
+    const goalCtx = document.getElementById('goal-chart').getContext('2d');
+    if (goalChart) {
+        goalChart.destroy();
+    }
+    goalChart = new Chart(goalCtx, {
+        type: 'line',
+        data: {
+            labels: ages,
+            datasets: [
+                {
+                    label: 'Projected Corpus (₹)',
+                    data: endingCorpus,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 111, 253, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Target Corpus (₹)',
+                    data: targetCorpus,
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.3,
+                    fill: false,
+                    borderDash: [5, 5]
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        callback: function(value) {
+                            return '₹' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
         }
-    );
+    });
+}
+// Initialize chart placeholders (kept for compatibility, does nothing)
+function initializeChartPlaceholders() {
+    // This function is kept to avoid breaking existing calls, but does nothing now.
+    // Charts are now created directly in the display functions.
+}
+
+// Export for potential use in other environments
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        calculateProjection,
+        runScenarioComparison,
+        calculateGoalPlanner,
+        formatINR
+    };
 }

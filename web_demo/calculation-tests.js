@@ -210,17 +210,17 @@ function testZeroReturnCase() {
     const projection = calculateProjection(inputs);
 
     // With zero return and zero inflation:
-    // Each year: starting wealth + investment contribution = ending wealth
+    // Each year: starting wealth + annual savings = ending wealth
+    const annualSavings = (inputs.monthly_income - inputs.monthly_expenses) * 12;
     let expectedWealth = inputs.current_savings;
 
     for (let i = 0; i < projection.length; i++) {
         const year = projection[i];
-        const expectedYearWealth = expectedWealth + inputs.monthly_investment_contribution * 12;
+        const expectedYearWealth = expectedWealth + annualSavings;
 
         if (Math.abs(year.ending_nominal_wealth - expectedYearWealth) > 0.01) {
             throw new Error(`Year ${year.age}: Zero return case mismatch: got ${year.ending_nominal_wealth}, expected ${expectedYearWealth}`);
         }
-
         expectedWealth = expectedYearWealth; // For next year
     }
 
@@ -362,6 +362,11 @@ function runAllCalculationTests() {
 // In a browser environment, we might want to expose this function for manual testing
 if (typeof module !== 'undefined' && module.exports) {
     // Node.js environment
+    const funcs = require('./app.js');
+    global.calculateProjection = funcs.calculateProjection;
+    global.runScenarioComparison = funcs.runScenarioComparison;
+    global.calculateGoalPlanner = funcs.calculateGoalPlanner;
+    global.formatINR = funcs.formatINR;
     module.exports = {
         testWealthProjection,
         testScenarioComparison,
@@ -371,6 +376,11 @@ if (typeof module !== 'undefined' && module.exports) {
         testValidationEdgeCases,
         runAllCalculationTests
     };
+    // Run tests when executed directly
+    if (require.main === module) {
+        const result = runAllCalculationTests();
+        process.exit(result ? 0 : 1);
+    }
 }
 // In browser, we attach to window for manual testing
 else if (typeof window !== 'undefined') {
