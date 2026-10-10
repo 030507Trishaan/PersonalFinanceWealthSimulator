@@ -8,3 +8,6 @@ ui/*.backup
 ui/*.before-*
 ui/*.broken-backup
 ui/app_backup_*.py
+
+# Local backup files - do not track
+/web_demo_backup/
