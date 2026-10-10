@@ -7,204 +7,228 @@
     <link rel="stylesheet" href="./styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Personal Finance & Wealth Simulator</h1>
-            <p class="subtitle">Interactive financial planning, wealth projection and goal planning.</p>
-        </header>
-
-        <nav class="tabs">
-            <button class="tab-button active" data-tab="wealth-simulator">Wealth Simulator</button>
-            <button class="tab-button" data-tab="scenario-comparison">Scenario Comparison</button>
-            <button class="tab-button" data-tab="goal-planner">Goal Planner</button>
-        </nav>
-
-        <div class="tab-content">
-            <!-- Wealth Simulator Tab -->
-            <section id="wealth-simulator" class="tab-panel active">
-                <form id="wealth-form">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="current-age">Current Age (years)</label>
-                            <input type="number" id="current-age" min="1" max="100" value="30" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="target-age">Target Age (years)</label>
-                            <input type="number" id="target-age" min="2" max="100" value="35" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="current-savings">Current Savings (₹)</label>
-                            <input type="number" id="current-savings" min="0" value="10000" step="1000" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="monthly-income">Monthly Income (₹/mo)</label>
-                            <input type="number" id="monthly-income" min="0" value="5000" step="100" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="monthly-expenses">Monthly Expenses (₹/mo)</label>
-                            <input type="number" id="monthly-expenses" min="0" value="3000" step="100" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="monthly-investment">Monthly Investment Contribution (₹/mo)</label>
-                            <input type="number" id="monthly-investment" min="0" value="1000" step="50" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="annual-income-growth">Annual Income Growth (%/yr)</label>
-                            <input type="number" id="annual-income-growth" min="0" max="20" value="0" step="0.1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="annual-expense-growth">Annual Expense Growth (%/yr)</label>
-                            <input type="number" id="annual-expense-growth" min="0" max="20" value="0" step="0.1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="expected-return">Expected Annual Return (%/yr)</label>
-                            <input type="number" id="expected-return" min="0" max="20" value="5" step="0.1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="annual-inflation">Annual Inflation Rate (%/yr)</label>
-                            <input type="number" id="annual-inflation" min="0" max="10" value="2" step="0.1" required>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary">Calculate Projection</button>
-                </form>
-
-                <div id="wealth-results" class="results-section">
-                    <!-- Results will be injected here -->
+<body class="dark-theme">
+    <div class="dashboard">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-brand">
+                    <div class="brand-title">Personal Finance</div>
+                    <div class="brand-subtitle">Wealth Simulator</div>
                 </div>
-            </section>
-
-            <!-- Scenario Comparison Tab -->
-            <section id="scenario-comparison" class="tab-panel">
-                <form id="scenario-form">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="scenario-current-age">Current Age (years)</label>
-                            <input type="number" id="scenario-current-age" min="1" max="100" value="30" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-target-age">Target Age (years)</label>
-                            <input type="number" id="scenario-target-age" min="2" max="100" value="35" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-current-savings">Current Savings (₹)</label>
-                            <input type="number" id="scenario-current-savings" min="0" value="10000" step="1000" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-monthly-income">Monthly Income (₹/mo)</label>
-                            <input type="number" id="scenario-monthly-income" min="0" value="5000" step="100" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-monthly-expenses">Monthly Expenses (₹/mo)</label>
-                            <input type="number" id="scenario-monthly-expenses" min="0" value="3000" step="100" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-monthly-investment">Monthly Investment Contribution (₹/mo)</label>
-                            <input type="number" id="scenario-monthly-investment" min="0" value="1000" step="50" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-base-return">Base Expected Annual Return (%/yr)</label>
-                            <input type="number" id="scenario-base-return" min="0" max="20" value="5" step="0.1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-base-income-growth">Base Annual Income Growth (%/yr)</label>
-                            <input type="number" id="scenario-base-income-growth" min="0" max="20" value="0" step="0.1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-base-expense-growth">Base Annual Expense Growth (%/yr)</label>
-                            <input type="number" id="scenario-base-expense-growth" min="0" max="20" value="0" step="0.1" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="scenario-base-inflation">Base Annual Inflation Rate (%/yr)</label>
-                            <input type="number" id="scenario-base-inflation" min="0" max="10" value="2" step="0.1" required>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary">Run Scenario Comparison</button>
-                </form>
-
-                <div id="scenario-results" class="results-section">
-                    <!-- Results will be injected here -->
-                </div>
-            </section>
-
-            <!-- Goal Planner Tab -->
-            <section id="goal-planner" class="tab-panel">
-                <form id="goal-form">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="goal-current-age">Current Age</label>
-                            <input type="number" id="goal-current-age" min="0" max="100" value="20" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="goal-age">Goal/Retirement Age</label>
-                            <input type="number" id="goal-age" min="1" max="100" value="50" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="goal-target">Target Corpus (₹)</label>
-                            <input type="number" id="goal-target" min="0" value="10000000" step="100000" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="goal-current-savings">Current Savings/Investments (₹)</label>
-                            <input type="number" id="goal-current-savings" min="0" value="0" step="10000" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="goal-return">Expected Annual Return (%/yr)</label>
-                            <input type="number" id="goal-return" min="0" max="20" value="10" step="0.1" required>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary">Calculate Goal</button>
-                </form>
-
-                <div id="goal-results" class="results-section">
-                    <!-- Results will be injected here -->
-                </div>
-            </section>
-        </div>
-
-        <div class="footer">
-            <div class="about-section">
-                <h3>About this project</h3>
-                <p>
-                    This is a personal finance and wealth planning simulator that models income, expenses,
-                    savings, investment contributions, returns and inflation. It includes scenario comparison
-                    and goal-based planning capabilities.
-                </p>
-                <p>
-                    The original implementation uses Python/Streamlit. This page is a static browser-based
-                    demo for easy access.
-                </p>
-                <div class="links">
-                    <a href="https://github.com/030507Trishaan/PersonalFinanceWealthSimulator" class="btn-link" target="_blank">
-                        View source on GitHub
-                    </a>
+                <div class="sidebar-toggle" id="sidebar-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
             </div>
-        </div>
+            <nav class="sidebar-nav">
+                <button class="nav-button active" data-tab="wealth-simulator" aria-label="Wealth Simulator">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Wealth Simulator</span>
+                </button>
+                <button class="nav-button" data-tab="scenario-comparison" aria-label="Scenario Comparison">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Scenario Comparison</span>
+                </button>
+                <button class="nav-button" data-tab="goal-planner" aria-label="Goal Planner">
+                    <span class="nav-icon">🎯</span>
+                    <span class="nav-text">Goal Planner</span>
+                </button>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h1 class="main-title">Personal Finance & Wealth Simulator</h1>
+                <p class="main-subtitle">Interactive financial planning, wealth projection and goal planning.</p>
+            </header>
+
+            <div class="tab-content">
+                <!-- Wealth Simulator Tab -->
+                <section id="wealth-simulator" class="tab-panel active">
+                    <form id="wealth-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="current-age">Current Age (years)</label>
+                                <input type="number" id="current-age" min="1" max="100" value="30" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="target-age">Target Age (years)</label>
+                                <input type="number" id="target-age" min="2" max="100" value="35" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="current-savings">Current Savings (₹)</label>
+                                <input type="number" id="current-savings" min="0" value="10000" step="1000" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="monthly-income">Monthly Income (₹/mo)</label>
+                                <input type="number" id="monthly-income" min="0" value="5000" step="100" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="monthly-expenses">Monthly Expenses (₹/mo)</label>
+                                <input type="number" id="monthly-expenses" min="0" value="3000" step="100" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="monthly-investment">Monthly Investment Contribution (₹/mo)</label>
+                                <input type="number" id="monthly-investment" min="0" value="1000" step="50" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="annual-income-growth">Annual Income Growth (%/yr)</label>
+                                <input type="number" id="annual-income-growth" min="0" max="20" value="0" step="0.1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="annual-expense-growth">Annual Expense Growth (%/yr)</label>
+                                <input type="number" id="annual-expense-growth" min="0" max="20" value="0" step="0.1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="expected-return">Expected Annual Return (%/yr)</label>
+                                <input type="number" id="expected-return" min="0" max="20" value="5" step="0.1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="annual-inflation">Annual Inflation Rate (%/yr)</label>
+                                <input type="number" id="annual-inflation" min="0" max="10" value="2" step="0.1" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Calculate Projection</button>
+                    </form>
+
+                    <div id="wealth-results" class="results-section">
+                        <!-- Results will be injected here -->
+                    </div>
+                </section>
+
+                <!-- Scenario Comparison Tab -->
+                <section id="scenario-comparison" class="tab-panel">
+                    <form id="scenario-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="scenario-current-age">Current Age (years)</label>
+                                <input type="number" id="scenario-current-age" min="1" max="100" value="30" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-target-age">Target Age (years)</label>
+                                <input type="number" id="scenario-target-age" min="2" max="100" value="35" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-current-savings">Current Savings (₹)</label>
+                                <input type="number" id="scenario-current-savings" min="0" value="10000" step="1000" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-monthly-income">Monthly Income (₹/mo)</label>
+                                <input type="number" id="scenario-monthly-income" min="0" value="5000" step="100" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-monthly-expenses">Monthly Expenses (₹/mo)</label>
+                                <input type="number" id="scenario-monthly-expenses" min="0" value="3000" step="100" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-monthly-investment">Monthly Investment Contribution (₹/mo)</label>
+                                <input type="number" id="scenario-monthly-investment" min="0" value="1000" step="50" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-base-return">Base Expected Annual Return (%/yr)</label>
+                                <input type="number" id="scenario-base-return" min="0" max="20" value="5" step="0.1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-base-income-growth">Base Annual Income Growth (%/yr)</label>
+                                <input type="number" id="scenario-base-income-growth" min="0" max="20" value="0" step="0.1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-base-expense-growth">Base Annual Expense Growth (%/yr)</label>
+                                <input type="number" id="scenario-base-expense-growth" min="0" max="20" value="0" step="0.1" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="scenario-base-inflation">Base Annual Inflation Rate (%/yr)</label>
+                                <input type="number" id="scenario-base-inflation" min="0" max="10" value="2" step="0.1" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Run Scenario Comparison</button>
+                    </form>
+
+                    <div id="scenario-results" class="results-section">
+                        <!-- Results will be injected here -->
+                    </div>
+                </section>
+
+                <!-- Goal Planner Tab -->
+                <section id="goal-planner" class="tab-panel">
+                    <form id="goal-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="goal-current-age">Current Age</label>
+                                <input type="number" id="goal-current-age" min="0" max="100" value="20" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="goal-age">Goal/Retirement Age</label>
+                                <input type="number" id="goal-age" min="1" max="100" value="50" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="goal-target">Target Corpus (₹)</label>
+                                <input type="number" id="goal-target" min="0" value="10000000" step="100000" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="goal-current-savings">Current Savings/Investments (₹)</label>
+                                <input type="number" id="goal-current-savings" min="0" value="0" step="10000" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="goal-return">Expected Annual Return (%/yr)</label>
+                                <input type="number" id="goal-return" min="0" max="20" value="10" step="0.1" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Calculate Goal</button>
+                    </form>
+
+                    <div id="goal-results" class="results-section">
+                        <!-- Results will be injected here -->
+                    </div>
+                </section>
+            </div>
+
+            <footer class="main-footer">
+                <div class="about-section">
+                    <h3>About this project</h3>
+                    <p>
+                        This is a personal finance and wealth planning simulator that models income, expenses,
+                        savings, investment contributions, returns and inflation. It includes scenario comparison
+                        and goal-based planning capabilities.
+                    </p>
+                    <p>
+                        The original implementation uses Python/Streamlit. This page is a static browser-based
+                        demo for easy access.
+                    </p>
+                    <div class="links">
+                        <a href="https://github.com/030507Trishaan/PersonalFinanceWealthSimulator" class="btn-link" target="_blank">
+                            View source on GitHub
+                        </a>
+                    </div>
+                </div>
+            </footer>
+        </main>
     </div>
 
     <script src="./app.js"></script>

@@ -484,7 +484,7 @@ let goalChart = null;
 if (typeof document !== 'undefined') {
 document.addEventListener('DOMContentLoaded', function() {
     // Tab switching functionality
-    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabButtons = document.querySelectorAll('.nav-button');
     const tabPanels = document.querySelectorAll('.tab-panel');
 
     tabButtons.forEach(button => {
@@ -660,7 +660,7 @@ function displayWealthResults(projection, inputs) {
                         </tr>
                     </thead>
                     <tbody>
-    `;
+        `;
 
     df.forEach(row => {
         tableHTML += `
@@ -732,11 +732,11 @@ function displayWealthResults(projection, inputs) {
 
     wealthResults.innerHTML = metricsHTML + chartsHTML + tableHTML + insightsHTML;
 
-    // Initialize or update charts
+    // Initialize or update charts with PRESENTATION ENHANCEMENTS (gradients, styling)
     updateWealthCharts(df);
 }
 
-// Update wealth simulator charts
+// Update wealth simulator charts with PRESENTATION ENHANCEMENTS
 function updateWealthCharts(df) {
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
@@ -754,11 +754,21 @@ function updateWealthCharts(df) {
     const investmentContribution = df.map(row => row.annual_investment_contribution);
     const cashSavings = df.map(row => row.uninvested_cash_savings);
 
-    // Wealth Projection Over Time chart
+    // Wealth Projection Over Time chart with gradient enhancement
     const wealthCtx = document.getElementById('wealth-chart').getContext('2d');
     if (wealthChart) {
         wealthChart.destroy();
     }
+
+    // Create gradient for wealth chart
+    const wealthGradient = wealthCtx.createLinearGradient(0, 0, 0, 400);
+    wealthGradient.addColorStop(0, 'rgba(52, 211, 153, 0.8)');
+    wealthGradient.addColorStop(1, 'rgba(52, 211, 153, 0.1)');
+
+    const realWealthGradient = wealthCtx.createLinearGradient(0, 0, 0, 400);
+    realWealthGradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+    realWealthGradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
+
     wealthChart = new Chart(wealthCtx, {
         type: 'line',
         data: {
@@ -767,18 +777,30 @@ function updateWealthCharts(df) {
                 {
                     label: 'Nominal Wealth (₹)',
                     data: nominalWealth,
-                    borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 111, 253, 0.1)',
-                    tension: 0.3,
-                    fill: false
+                    borderColor: '#34D399',
+                    backgroundColor: wealthGradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#34D399',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Real Wealth (₹)',
                     data: realWealth,
-                    borderColor: '#198754',
-                    backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                    tension: 0.3,
-                    fill: false
+                    borderColor: '#10B981',
+                    backgroundColor: realWealthGradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#10B981',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
@@ -789,9 +811,28 @@ function updateWealthCharts(df) {
                 title: {
                     display: false
                 },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    boxWidth: 12,
+                    boxHeight: 12
                 }
             },
             scales: {
@@ -801,6 +842,25 @@ function updateWealthCharts(df) {
                         // Include a rupee symbol in the tick labels
                         callback: function(value) {
                             return '₹' + value.toLocaleString();
+                        },
+                        color: '#D1D5DB',
+                        font: {
+                            size: 12
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(55, 65, 81, 0.1)',
+                        borderColor: 'rgba(55, 65, 81, 0.2)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        color: '#D1D5DB',
+                        font: {
+                            size: 12
                         }
                     }
                 }
@@ -808,11 +868,21 @@ function updateWealthCharts(df) {
         }
     });
 
-    // Wealth Composition: Invested vs Cash chart
+    // Wealth Composition: Invested vs Cash chart with gradient enhancement
     const compositionCtx = document.getElementById('composition-chart').getContext('2d');
     if (compositionChart) {
         compositionChart.destroy();
     }
+
+    // Create gradient for composition chart
+    const investedGradient = compositionCtx.createLinearGradient(0, 0, 0, 400);
+    investedGradient.addColorStop(0, 'rgba(255, 193, 7, 0.8)');
+    investedGradient.addColorStop(1, 'rgba(255, 193, 7, 0.1)');
+
+    const cashGradient = compositionCtx.createLinearGradient(0, 0, 0, 400);
+    cashGradient.addColorStop(0, 'rgba(32, 201, 151, 0.8)');
+    cashGradient.addColorStop(1, 'rgba(32, 201, 151, 0.1)');
+
     compositionChart = new Chart(compositionCtx, {
         type: 'line',
         data: {
@@ -822,17 +892,29 @@ function updateWealthCharts(df) {
                     label: 'Invested Wealth (₹)',
                     data: investedWealth,
                     borderColor: '#ffc107',
-                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                    tension: 0.3,
-                    fill: false
+                    backgroundColor: investedGradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#ffc107',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Cash Wealth (₹)',
                     data: cashWealth,
                     borderColor: '#20c997',
-                    backgroundColor: 'rgba(32, 201, 151, 0.1)',
-                    tension: 0.3,
-                    fill: false
+                    backgroundColor: cashGradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#20c997',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
@@ -843,9 +925,28 @@ function updateWealthCharts(df) {
                 title: {
                     display: false
                 },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    boxWidth: 12,
+                    boxHeight: 12
                 }
             },
             scales: {
@@ -861,11 +962,21 @@ function updateWealthCharts(df) {
         }
     });
 
-    // Annual Savings Breakdown chart
+    // Annual Savings Breakdown chart with gradient enhancement
     const savingsCtx = document.getElementById('savings-chart').getContext('2d');
     if (savingsChart) {
         savingsChart.destroy();
     }
+
+    // Create gradient for savings chart
+    const investmentGradient = savingsCtx.createLinearGradient(0, 0, 0, 400);
+    investmentGradient.addColorStop(0, 'rgba(253, 126, 20, 0.8)');
+    investmentGradient.addColorStop(1, 'rgba(253, 126, 20, 0.1)');
+
+    const cashSavingsGradient = savingsCtx.createLinearGradient(0, 0, 0, 400);
+    cashSavingsGradient.addColorStop(0, 'rgba(111, 66, 193, 0.8)');
+    cashSavingsGradient.addColorStop(1, 'rgba(111, 66, 193, 0.1)');
+
     savingsChart = new Chart(savingsCtx, {
         type: 'line',
         data: {
@@ -875,17 +986,29 @@ function updateWealthCharts(df) {
                     label: 'Investment Contribution (₹)',
                     data: investmentContribution,
                     borderColor: '#fd7e14',
-                    backgroundColor: 'rgba(253, 126, 20, 0.1)',
-                    tension: 0.3,
-                    fill: false
+                    backgroundColor: investmentGradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fd7e14',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Cash Savings (₹)',
                     data: cashSavings,
                     borderColor: '#6f42c1',
-                    backgroundColor: 'rgba(111, 66, 193, 0.1)',
-                    tension: 0.3,
-                    fill: false
+                    backgroundColor: cashSavingsGradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#6f42c1',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
@@ -896,9 +1019,28 @@ function updateWealthCharts(df) {
                 title: {
                     display: false
                 },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    boxWidth: 12,
+                    boxHeight: 12
                 }
             },
             scales: {
@@ -921,8 +1063,8 @@ function drawChartError(canvasId, message) {
     if (canvas) {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#dc3545';
-        ctx.font = '14px Arial';
+        ctx.fillStyle = 'var(--status-negative)';
+        ctx.font = '14px var(--font-sans)';
         ctx.textAlign = 'center';
         ctx.fillText(message, canvas.width / 2, canvas.height / 2);
     }
@@ -1064,11 +1206,11 @@ function displayScenarioResults(results) {
 
     scenarioResults.innerHTML = wealthTableHTML + assumptionsTableHTML + chartHTML;
 
-    // Initialize or update scenario chart
+    // Initialize or update scenario chart with PRESENTATION ENHANCEMENTS
     updateScenarioChart(results);
 }
 
-// Update scenario comparison chart
+// Update scenario comparison chart with PRESENTATION ENHANCEMENTS
 function updateScenarioChart(results) {
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
@@ -1113,13 +1255,30 @@ function updateScenarioChart(results) {
     for (const scenarioType of scenarioTypes) {
         if (results.scenarios[scenarioType] && results.scenarios[scenarioType].projection && results.scenarios[scenarioType].projection.length > 0) {
             const wealthData = results.scenarios[scenarioType].projection.map(row => row.ending_nominal_wealth);
+
+            // Create gradient for each scenario line
+            const scenarioCtx = document.getElementById('scenario-chart').getContext('2d');
+            const gradient = scenarioCtx.createLinearGradient(0, 0, 0, 400);
+            const hexColor = colors[scenarioType].replace('#', '');
+            const r = parseInt(hexColor.substring(0, 2), 16);
+            const g = parseInt(hexColor.substring(2, 4), 16);
+            const b = parseInt(hexColor.substring(4, 6), 16);
+            gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.8)`);
+            gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.1)`);
+
             chartData.datasets.push({
                 label: scenarioNames[scenarioType],
                 data: wealthData,
                 borderColor: colors[scenarioType],
-                backgroundColor: hexToRgba(colors[scenarioType], 0.1),
-                tension: 0.3,
-                fill: false
+                backgroundColor: gradient,
+                tension: 0.4,
+                fill: true,
+                borderWidth: 3,
+                pointBackgroundColor: colors[scenarioType],
+                pointBorderColor: '#fff',
+                pointBorderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6
             });
         }
     }
@@ -1138,9 +1297,28 @@ function updateScenarioChart(results) {
                 title: {
                     display: false
                 },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    boxWidth: 12,
+                    boxHeight: 12
                 }
             },
             scales: {
@@ -1310,7 +1488,7 @@ function displayGoalResults(result) {
         </div>
     `;
 
-    // Chart for corpus growth projection
+    // Chart for corpus growth projection with PRESENTATION ENHANCEMENTS
     let chartHTML = `
         <div class="chart-wrapper">
             <h3 class="chart-title">Corpus Growth Projection</h3>
@@ -1322,11 +1500,11 @@ function displayGoalResults(result) {
 
     goalResults.innerHTML = prominentHTML + statusHTML + detailsHTML + tableHTML + chartHTML;
 
-    // Initialize or update goal chart
+    // Initialize or update goal chart with PRESENTATION ENHANCEMENTS
     updateGoalChart(result);
 }
 
-// Update goal planner chart
+// Update goal planner chart with PRESENTATION ENHANCEMENTS
 function updateGoalChart(result) {
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
@@ -1339,10 +1517,22 @@ function updateGoalChart(result) {
     const endingCorpus = projection.map(row => row['Ending Corpus']);
     const targetCorpus = projection.map(row => row['Target Corpus']); // This is constant but we'll map it
 
+    // Create gradients for goal chart
     const goalCtx = document.getElementById('goal-chart').getContext('2d');
     if (goalChart) {
         goalChart.destroy();
     }
+
+    // Create gradient for projected corpus line
+    const projectedGradient = goalCtx.createLinearGradient(0, 0, 0, 400);
+    projectedGradient.addColorStop(0, 'rgba(13, 111, 253, 0.8)');
+    projectedGradient.addColorStop(1, 'rgba(13, 111, 253, 0.1)');
+
+    // Create gradient for target corpus line (dashed)
+    const targetGradient = goalCtx.createLinearGradient(0, 0, 0, 400);
+    targetGradient.addColorStop(0, 'rgba(220, 53, 69, 0.8)');
+    targetGradient.addColorStop(1, 'rgba(220, 53, 69, 0.1)');
+
     goalChart = new Chart(goalCtx, {
         type: 'line',
         data: {
@@ -1352,17 +1542,29 @@ function updateGoalChart(result) {
                     label: 'Projected Corpus (₹)',
                     data: endingCorpus,
                     borderColor: '#0d6efd',
-                    backgroundColor: 'rgba(13, 111, 253, 0.1)',
-                    tension: 0.3,
-                    fill: false
+                    backgroundColor: projectedGradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#0d6efd',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label: 'Target Corpus (₹)',
                     data: targetCorpus,
                     borderColor: '#dc3545',
-                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                    tension: 0.3,
-                    fill: false,
+                    backgroundColor: targetGradient,
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3,
+                    pointBackgroundColor: '#dc3545',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                     borderDash: [5, 5]
                 }
             ]
@@ -1374,9 +1576,28 @@ function updateGoalChart(result) {
                 title: {
                     display: false
                 },
+                legend: {
+                    position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20,
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
                 tooltip: {
                     mode: 'index',
                     intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.9)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    borderColor: '#374151',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    boxWidth: 12,
+                    boxHeight: 12
                 }
             },
             scales: {
@@ -1392,6 +1613,7 @@ function updateGoalChart(result) {
         }
     });
 }
+
 // Initialize chart placeholders (kept for compatibility, does nothing)
 function initializeChartPlaceholders() {
     // This function is kept to avoid breaking existing calls, but does nothing now.
